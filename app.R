@@ -59,7 +59,8 @@ server <- function(input, output) {
       jeopardy <- jeopardy %>%
         filter(title == input$type)    }
     
-    jeopardy
+    jeopardy %>% 
+      select(question,value, airdate, answer)
   })
   
   finalreact <- reactive({

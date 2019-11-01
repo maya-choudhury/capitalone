@@ -1,0 +1,12 @@
+name: project
+title: project
+username:
+account: maya-choudhury
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1392758
+bundleId: 2556122
+url: https://maya-choudhury.shinyapps.io/project/
+when: 1572583699.13775
+asMultiple: FALSE
+asStatic: FALSE
