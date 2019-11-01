@@ -32,77 +32,74 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                   # Output: Description, lineplot, and reference
                   mainPanel(
                     DT::dataTableOutput("out"),
-                    #textOutput("final"),
+                    dataTableOutput("final"),
                     tags$a(href = "http://www.jservice.io/", "Source: Jeopardy API")
                   )
                 )
 )
 
 server <- function(input, output) {
-  # Subset data
-  
-  getInput <- reactive({
-    getSymbols(
-    difficulty = input$dif,
-    type = input$type,
-    date1 = input$date[1],
-    date2 = input$date[2],
-    rand = input$random,
-    final = input$final,
-    auto.assign = FALSE)
+    
+  searchreact <- reactive({
+    if(!is.null(input$dif)){
+      jeopardy <- jeopardy %>%
+        filter(value == as.integer(input$dif))
+    }
+    if(!is.null(input$date)){
+      jeopardy <- jeopardy %>%
+        filter(airdate <= input$date[2] & airdate>=input$date[1]) 
+    }
+    if(!is.null(input$type)){
+        jeopardy <- jeopardy %>%
+          filter(title == input$type)    }
+    
+    jeopardy
   })
-
-  # set_jeopardy <- reactive({
-  #   if (difficulty>0) {
-  #     jeopardy %>%
-  #       filter(value == difficulty)
-  #   }
-  # })
-  #   if (date1>'1984-09-10' || date2 < '2015-03-31'){
-  #     jeopardy %>%
-  #       filter(airdate <= date2 & airdate>=date1)
-  #   }
-  #   if (type!=""){
-  #     jeopardy %>%
-  #       filter(title == type)
-  #   }
-  #   jeopardy %>%
-  #     slice(1:25)
-  # })
-  # 
-  # finaljeop <- reactive({
-  #   if (final==TRUE) {
-  #     jeopardy %>%
-  #       filter(value==1000) %>%
-  #       sample_n(1)
-  #   }
-  # })
-  # 
-  # output$final <- renderText({
-  #   'There are 30 seconds alloted for final jeopardy' # + finaljeop['question']
-  #   # reactiveTimer(intervalMs = 1000)
-  # })
-  # 
+  
+  finalreact <- reactive({
+    if(!is.null(input$final)){
+      finalq <- jeopardy %>% 
+        filter(value==1000) %>% 
+        sample_n(1) %>% 
+        select(question, answer)
+    }
+    finalq
+  })
+ 
+  randomreact <- reactive({
+    if(!is.null(input$random)){
+      random_jeopardy <- jeopardy %>%  
+        sample_n(25)  %>%
+        select(question,value, airdate, answer)
+    }
+    'There are 30 seconds alloted for final jeopardy'
+    # reactiveTimer(intervalMs = 1000)
+    random_jeopardy 
+  }) 
+  
+  
   output$out <- DT::renderDataTable({
-    difreact <- eventReactive( input$dif, {
-      jeopardy %>%
-        filter(value == input$dif)
-      })
-    datereact <- eventReactive(input$date, {
-      jeopardy %>%
-        filter(airdate <= input$date[2] & airdate>=input$date[1])
-    })
-    typereact <- eventReactive(input$type, {
-      jeopardy %>%
-        filter(title == input$type)
-    })
-  set_jeopardy <- jeopardy %>%
-    filter(!is.na(question), !is.na(answer)) %>% 
-    sample_n(25) %>% 
-    select(question, answer)
-  
-  set_jeopardy
+    if(!input$final & !input$random){
+      jeopardy <- searchreact()
+      set_jeopardy <- jeopardy %>%
+        filter(!is.na(question), !is.na(answer)) %>%
+        sample_n(25) %>%
+        select(question,value, airdate, answer) # add category
+
+      set_jeopardy
+    }
+    
+    if(!input$final){
+      random <- randomreact()
+      random
+    }
+    
   })
+  
+  output$text <- renderDataTable(
+    finalq <- finalreact()
+    finalq
+  )
   
 }
 
