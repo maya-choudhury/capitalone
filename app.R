@@ -26,7 +26,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                     textInput("category", label = strong("Jeopardy Category")),
                     helpText("Note: There are set categories that Jeopardy
                              uses. To see how the category search feature works, 
-                             try 'comedians' or 'hollywood legends'"),
+                             try 'shells' or 'rhyme time'"),
                     checkboxInput(inputId = "random", label = "Select Random Game", value=FALSE), 
                     checkboxInput(inputId = "final", label = "Simulate Final Jeopardy", value=FALSE)                  ),
                   
@@ -55,12 +55,12 @@ server <- function(input, output) {
       jeopardy <- jeopardy %>%
         filter(airdate <= input$date[2] & airdate>=input$date[1]) 
     }
-    if(!is.null(input$type)){
+    if(input$category!=""){
       jeopardy <- jeopardy %>%
-        filter(title == input$type)    }
+        filter(title == input$category)    }
     
     jeopardy %>% 
-      select(question,value, airdate, answer)
+      select(question,value, airdate, title, answer)
   })
   
   finalreact <- reactive({
@@ -82,8 +82,8 @@ server <- function(input, output) {
       
       random_jeopardy <- jeopardy %>%  
         filter(!is.na(question), !is.na(answer), airdate==sample(unique(airdate),1)) %>% 
-        select(question,value, airdate, answer) %>% 
-        arrange(value)
+        select(question,value, airdate, title, answer) %>% 
+        arrange(title)
     }
     random_jeopardy 
     
@@ -99,17 +99,21 @@ server <- function(input, output) {
   output$finaltext <- renderText({
     if(input$final){ 
       paste("We chose a random 1000 level question for you to test out your 
-      skills! The current time is", Sys.time(), ". Give yourself  
+      skills! The timer started at ", Sys.time(), ". Give yourself  
       30 seconds for Final Jeopardy. ")
       }
   })
   output$out <- DT::renderDataTable({
     if(!input$final & !input$random){
       jeopardy <- searchreact()
+      n <- nrow(jeopardy)
+      if(n>25){
+        n <-25
+      }
       set_jeopardy <- jeopardy %>%
         filter(!is.na(question), !is.na(answer)) %>%
-        sample_n(25) %>%
-        select(question,value, airdate, answer) # add category
+        sample_n(n) %>%
+        select(question,value, airdate, title, answer)
       
       set_jeopardy
     }
