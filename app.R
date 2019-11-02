@@ -93,32 +93,28 @@ server <- function(input, output, session) {
     }
   })
   
-  curtime <- eventReactive(input$final, { 
+  futuretime <- eventReactive(input$final, { 
     time <- as.POSIXlt(Sys.time()+30)
     time
     })
   
-  timer <- reactive({
-    time <- curtime()
-    time-Sys.time()
-  })
-  
   output$finaltext <- renderText({
     if(input$final & input$random==FALSE){ 
       invalidateLater(1, session)
-      x <- curtime()
+      x <- futuretime()
       time <- strptime((x-Sys.time()), "%S")
       paste("We chose a random 1000 level question for you to test out your 
-      skills! You have ", time, " seconds left. Contestants usually get 30 seconds for 
-            Final Jeopardy. ")
+      skills! You have ", time, " seconds left. Contestants usually get 30 seconds
+      for Final Jeopardy. ")
+    
       }
   })
   output$out <- DT::renderDataTable({
     if(!input$final & !input$random){
       jeopardy <- searchreact()
       n <- nrow(jeopardy)
-      if(n>25){
-        n <-25
+      if(n>100){
+        n <-100
       }
       set_jeopardy <- jeopardy %>%
         filter(!is.na(question), !is.na(answer)) %>%
