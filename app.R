@@ -6,6 +6,8 @@ library(readr)
 jeopardy <- read_csv("data.csv", col_types = cols(game_id = col_double()))
 library(tidyverse)
 
+names(jeopardy)[names(jeopardy) == "title"] <- "category"
+
 ui <- fluidPage(theme = shinytheme("yeti"),
                 titlePanel("Maya's Jeopardy Web App"),
                 sidebarLayout(
@@ -58,10 +60,10 @@ server <- function(input, output, session) {
     }
     if(input$category!=""){
       jeopardy <- jeopardy %>%
-        filter(title == input$category)    }
+        filter(category == input$category)    }
     
     jeopardy %>% 
-      select(question,value, airdate, title, answer) 
+      select(question,value, airdate, category, answer) 
   })
   
   finalreact <- reactive({
@@ -79,8 +81,8 @@ server <- function(input, output, session) {
       
       random_jeopardy <- jeopardy %>%  
         filter(!is.na(question), !is.na(answer), airdate==sample(unique(airdate),1)) %>% 
-        select(question,value, airdate, title, answer) %>% 
-        arrange(title)
+        select(question,value, airdate, category, answer) %>% 
+        arrange(category)
     }
     random_jeopardy 
     
@@ -119,7 +121,7 @@ server <- function(input, output, session) {
       set_jeopardy <- jeopardy %>%
         filter(!is.na(question), !is.na(answer)) %>%
         sample_n(n) %>%
-        select(question,value, airdate, title, answer)
+        select(question,value, airdate, category, answer)
       
       set_jeopardy
     }
