@@ -71,7 +71,7 @@ server <- function(input, output, session) {
       finalq <- jeopardy %>% 
         filter(value==1000) %>% 
         sample_n(1) %>% 
-        select(question, answer)
+        select(question, category, answer)
     }
     finalq
   })
@@ -107,7 +107,8 @@ server <- function(input, output, session) {
       time <- strptime((x-Sys.time()), "%S")
       paste("We chose a random 1000 level question for you to test out your 
       skills! You have ", time, " seconds left. Contestants usually get 30 seconds
-      for Final Jeopardy. ")
+      for Final Jeopardy. Once your time is up, we recommend searching within 
+      the 1000 value for the question's category to find the right answer!")
     
       }
   })
@@ -144,8 +145,8 @@ server <- function(input, output, session) {
     if(input$final & !input$random){
       finalq <- finalreact()
       final <- finalq %>% 
-        select(question)
-      finalq
+        select(question, category)
+      final
     }
   )
   
