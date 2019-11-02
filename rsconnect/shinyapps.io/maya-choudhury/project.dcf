@@ -5,8 +5,8 @@ account: maya-choudhury
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1392758
-bundleId: 2556122
+bundleId: 2558300
 url: https://maya-choudhury.shinyapps.io/project/
-when: 1572583699.13775
+when: 1572654823.4466
 asMultiple: FALSE
 asStatic: FALSE
