@@ -37,12 +37,13 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                     textOutput("finaltext"), 
                     dataTableOutput("random"),
                     dataTableOutput("final"),
+                    textOutput("randfinal"), 
                     tags$a(href = "http://www.jservice.io/", "Source: Jeopardy API")
                   )
                 )
 )
 
-server <- function(input, output) {
+server <- function(input, output, session) {
   
   searchreact <- reactive({
     if(!is.null(input$dif)){
@@ -60,25 +61,21 @@ server <- function(input, output) {
         filter(title == input$category)    }
     
     jeopardy %>% 
-      select(question,value, airdate, title, answer)
+      select(question,value, airdate, title, answer) 
   })
   
   finalreact <- reactive({
-    if(!is.null(input$final)){
+    if(!is.null(input$final)  & input$random==FALSE){
       finalq <- jeopardy %>% 
         filter(value==1000) %>% 
         sample_n(1) %>% 
         select(question, answer)
     }
     finalq
-    
-    
-    #'There are 30 seconds alloted for final jeopardy'
-    # reactiveTimer(intervalMs = 1000)
   })
   
   randomreact <- reactive({ # this function seems to work
-    if(!is.null(input$random)){
+    if(!is.null(input$random) & input$final==FALSE){
       
       random_jeopardy <- jeopardy %>%  
         filter(!is.na(question), !is.na(answer), airdate==sample(unique(airdate),1)) %>% 
@@ -90,17 +87,30 @@ server <- function(input, output) {
   }) 
   
   output$randomtext <- renderText({
-    if(input$random){
+    if(input$random & input$final==FALSE){
     "We generated all of the questions from one Jeopardy episode for you 
         to play!"
     }
   })
   
+  curtime <- eventReactive(input$final, { 
+    time <- as.POSIXlt(Sys.time()+30)
+    time
+    })
+  
+  timer <- reactive({
+    time <- curtime()
+    time-Sys.time()
+  })
+  
   output$finaltext <- renderText({
-    if(input$final){ 
+    if(input$final & input$random==FALSE){ 
+      invalidateLater(1, session)
+      x <- curtime()
+      time <- strptime((x-Sys.time()), "%S")
       paste("We chose a random 1000 level question for you to test out your 
-      skills! The timer started at ", Sys.time(), ". Give yourself  
-      30 seconds for Final Jeopardy. ")
+      skills! You have ", time, " seconds left. Contestants usually get 30 seconds for 
+            Final Jeopardy. ")
       }
   })
   output$out <- DT::renderDataTable({
@@ -119,8 +129,13 @@ server <- function(input, output) {
     }
   })
   
+  output$randfinal <- renderText({ 
+    if(input$random & input$final){
+      'Please select either the random game OR final jeopardy option!'
+  }})
+  
   output$random <- renderDataTable(
-    if(input$random){
+    if(input$random  & input$final==FALSE){
       random <- randomreact()
       random
     }
@@ -128,7 +143,7 @@ server <- function(input, output) {
   
   finalanswer <- function(q) q
   output$final <- renderDataTable(
-    if(input$final){
+    if(input$final & !input$random){
       finalq <- finalreact()
       final <- finalq %>% 
         select(question)
